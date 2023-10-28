@@ -10,6 +10,7 @@ const { extname, join } = require("path");
 const Migrater = require("./migrate");
 const LocalMigrate = require('./localMigrate');
 const { format } = require("prettier");
+const contentMigrate = require("./contentMigrate");
 
 let config = {
   notion_secret: "",
@@ -76,9 +77,9 @@ async function sync() {
   let pages = await getPages(config.database_id);
   for (let i = 0; i < pages.length; i++) {
     const page = pages[i];
-
     console.log(`[${i + 1}]: ${page.properties.title.title[0].plain_text}`);
     let file = await download(page);
+    if (!file) continue;
     if(config.migrate_image) await migrateImages(file);
     published(page);
   }
@@ -121,16 +122,34 @@ async function published(page) {
  * @param {*} page
  */
 async function download(page) {
-  const mdblocks = await n2m.pageToMarkdown(page.id);
+  let mdblocks = await n2m.pageToMarkdown(page.id);
+  mdblocks = contentMigrate(mdblocks);
   let md = n2m.toMarkdownString(mdblocks);
 
   let properties = props(page);
+  // ignroe empty prop
+  for (const key in properties) {
+    if (properties[key] === null || 
+      properties[key] === undefined ||
+      properties[key].length === 0
+    ) delete properties[key];
+  }
+  // Check required props
+  if (!properties.title ||
+      !properties.filename ||
+      !properties.date
+  ) {
+    console.error("title, filename, date is required");
+    return null
+  }
+
+  let filename = properties.filename;
+  let filepath = join(config.output, filename + ".md");
+  delete properties.filename;
+  delete properties.status;
+
   fm = YAML.stringify(properties, { doubleQuotedAsJSON: true });
   md = `---\n${fm}---\n\n${md}`;
-
-  let filename = properties.title;
-  if (properties.urlname) filename = properties.urlname;
-  let filepath = join(config.output, filename + ".md");
 
   md = format(md, { parser: "markdown" });
   writeFileSync(filepath, md);
