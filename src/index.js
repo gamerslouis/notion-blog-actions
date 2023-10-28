@@ -4,7 +4,7 @@ const core = require("@actions/core");
 let config = {
   notion_secret: core.getInput("notion_secret"),
   database_id: core.getInput("database_id"),
-  migrate_image: core.getInput("migrate_image") === "true",
+  migrate_image: core.getInput("migrate_image"),
   aliyun: {
     accessKeyId: core.getInput("access_key_id"),
     accessKeySecret: core.getInput("access_key_secret"),
@@ -13,6 +13,10 @@ let config = {
     path: core.getInput("prefix"),
     customUrl: "",
     options: "",
+  },
+  local: {
+    path: core.getInput("local_path"),
+    urlBase: core.getInput("local_url_base"),
   },
   status: {
     name: core.getInput("status_name"),

@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node test.js",
+    "test": "node src/index.js",
     "build": "ncc build src/index.js -o dist/"
   },
   "author": "",
@@ -14,6 +14,7 @@
     "@actions/exec": "^1.1.0",
     "@actions/github": "^5.0.0",
     "@notionhq/client": "^0.4.9",
+    "@vercel/ncc": "^0.36.1",
     "adm-zip": "^0.5.9",
     "axios": "^0.24.0",
     "md5-file": "^5.0.0"

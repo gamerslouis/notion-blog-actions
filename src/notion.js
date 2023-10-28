@@ -8,6 +8,7 @@ const { PicGo } = require("picgo");
 const crypto = require("crypto");
 const { extname, join } = require("path");
 const Migrater = require("./migrate");
+const LocalMigrate = require('./localMigrate');
 const { format } = require("prettier");
 
 let config = {
@@ -32,25 +33,38 @@ let config = {
 };
 
 let notion = new Client({ auth: config.notion_secret });
-let picgo = new PicGo();
+let migrateCtx = null;
 let n2m = new NotionToMarkdown({ notionClient: notion });
+
+function loadMigrateCtx(conf) {
+  if (conf.migrate_image === 'aliyun') {
+    migrateCtx = new PicGo()
+    migrateCtx.setConfig({
+      picBed: { uploader: "aliyun", current: "aliyun", aliyun: config.aliyun },
+    });
+
+    // 文件重命名为 md5
+    migrateCtx.on("beforeUpload", (ctx) => {
+      ctx.output.forEach((item) => {
+        let ext = extname(item.fileName);
+        item.fileName =
+          crypto.createHash("md5").update(item.buffer).digest("hex") + ext;
+      });
+    });
+  } 
+  else if (conf.migrate_image === 'local'){
+    migrateCtx = new LocalMigrate(conf);
+  }
+  else {
+    console.error('migrate_image config error');
+    process.exit(1);
+  }
+}      
 
 function init(conf) {
   config = conf;
   notion = new Client({ auth: config.notion_secret });
-
-  picgo.setConfig({
-    picBed: { uploader: "aliyun", current: "aliyun", aliyun: config.aliyun },
-  });
-
-  // 文件重命名为 md5
-  picgo.on("beforeUpload", (ctx) => {
-    ctx.output.forEach((item) => {
-      let ext = extname(item.fileName);
-      item.fileName =
-        crypto.createHash("md5").update(item.buffer).digest("hex") + ext;
-    });
-  });
+  loadMigrateCtx(conf);
 
   // passing notion client to the option
   n2m = new NotionToMarkdown({ notionClient: notion });
@@ -73,7 +87,7 @@ async function sync() {
 }
 
 async function migrateImages(file) {
-  let res = await Migrater(picgo, [file]);
+  let res = await Migrater(migrateCtx, [file]);
   if (res.success != res.total)
     throw new Error(
       `file migrate img fail, total: ${res.total}, success: ${res.success}`

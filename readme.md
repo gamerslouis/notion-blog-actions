@@ -43,10 +43,16 @@ inputs:
     default: "待发布"
   migrate_image:
     description: |
-      是否迁移图片到 aliyun oss
+      是否迁移图片到 aliyun oss 或本地系統
       注意: 如果不迁移图片默认导出图片链接是 notion 的自带链接，有访问时效
-      目前支持迁移图片到 aliyun oss 中
-    default: "true"
+      目前支持迁移图片到 aliyun oss 中或保存到本地
+    default: "aliyun"
+  local_path:
+    description: 遷移圖片到本地時的路徑
+    required: false
+  local_url_base:
+    description: 遷移圖片到本地時的網頁路徑
+    required: false
   output:
     required: false
     description: 输出的文件夹路径
@@ -104,3 +110,15 @@ jobs:
         git commit -m "feat: auto update by notion sync"
         git push
 ```
+
+#### 本地保存
+  
+  ```yaml
+      - uses: mohuishou/notion-blog-actions@main
+      with:
+        notion_secret: ${{ secrets.NOTION_TOKEN }}
+        database_id: "xxx"
+        output: "./source/_posts/notion/"
+        local_path: "./source/img/pages/"
+        local_url_base: "/img/pages/"
+  ```
