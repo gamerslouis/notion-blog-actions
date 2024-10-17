@@ -50,7 +50,7 @@ class NotionFileHandler extends FileHandler.default {
       })
       .filter((item) => item);
 
-    let urls = markdownURLList.concat(imageTagURLList);
+    // let urls = markdownURLList.concat(imageTagURLList);
 
     // front matter
     let matchs = content.matchAll(/.*img:\s(.*)/gi);
@@ -62,7 +62,7 @@ class NotionFileHandler extends FileHandler.default {
       if (!src) continue;
       urls.push(src);
     }
-
+    
     this.urlList[file] = {};
     for (const url of urls) {
       this.urlList[file][url] = url;
