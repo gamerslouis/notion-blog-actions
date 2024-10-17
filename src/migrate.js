@@ -51,6 +51,7 @@ class NotionFileHandler extends FileHandler.default {
       .filter((item) => item);
 
     // let urls = markdownURLList.concat(imageTagURLList);
+    let urls = markdownURLList
 
     // front matter
     let matchs = content.matchAll(/.*img:\s(.*)/gi);
